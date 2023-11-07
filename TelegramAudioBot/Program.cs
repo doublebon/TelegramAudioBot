@@ -6,6 +6,7 @@ using PySharpTelegram.Core.Handlers;
 using PySharpTelegram.Core.Services.Abstract;
 using Telegram.Bot;
 using TelegramAudioBot.Connector;
+using TelegramAudioBot.Core.Storage;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -29,4 +30,6 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
+StorageContainer.AudioStorage = new TxtAudioStorage("audioStore.txt");
+await StorageContainer.AudioStorage.UpdateAudioCache();
 await host.RunAsync();

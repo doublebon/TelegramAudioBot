@@ -2,6 +2,7 @@ using PySharpTelegram.Core.Attributes;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
+using TelegramAudioBot.Core.Storage;
 
 namespace TelegramAudioBot.Chat;
 
@@ -10,23 +11,11 @@ public class ChatInline
     [InlineAttributes.Any]
     public static async Task ProcessInline(ITelegramBotClient bot, InlineQuery inline, User user, CancellationToken cancellationToken)
     {
-        InlineQueryResult[] results = {
-            // displayed result
-            new InlineQueryResultArticle(
-                id: "1",
-                title: "First",
-                inputMessageContent: new InputTextMessageContent("Hello")),
-            new InlineQueryResultArticle(
-                id: "2",
-                title: "Second",
-                inputMessageContent: new InputTextMessageContent("Hi")),
-        };
-        
         await bot.AnswerInlineQueryAsync(
             inline.Id,
-            results: results,
+            StorageContainer.AudioStorage.GetFilteredAudios(inline.Query),
             isPersonal: false,
-            cacheTime: 0, 
+            cacheTime: 0,
             cancellationToken: cancellationToken);
     }
 }

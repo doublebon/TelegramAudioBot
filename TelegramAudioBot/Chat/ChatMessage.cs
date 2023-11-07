@@ -2,15 +2,31 @@ using PySharpTelegram.Core.Attributes;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using TelegramAudioBot.Core.Storage;
+using TelegramAudioBot.Core.Support;
 
 namespace TelegramAudioBot.Chat;
 
 public class ChatMessage
 {
     
-    [MessageAttributes.FilterByType(MessageType.Text)]
+    [MessageAttributes.Command("/update")]
+    public static async Task ProcessUpdateCache(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await StorageContainer.AudioStorage.UpdateAudioCache();
+        await bot.SendTextMessageAsync(
+            chatId: message.Chat,
+            text: $"Cache was updated!",
+            cancellationToken: cancellationToken
+        );
+    }
+    
+    
+    [MessageAttributes.Command("/kek")]
     public static async Task ProcessText(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
+        await OpusConverter.ConvertToOpusAsync("test.mp3", "new.ogg");
+        
         await bot.SendTextMessageAsync(
             chatId: message.Chat,
             text: $"You was send a text: {message.Text} and your id is: {user.Id}",
