@@ -8,7 +8,7 @@ namespace TelegramAudioBot.Chat;
 
 public class ChatInline
 {
-    [InlineAttributes.Any]
+    [InlineFilter.Any]
     public static async Task ProcessInline(ITelegramBotClient bot, InlineQuery inline, User user, CancellationToken cancellationToken)
     {
         await bot.AnswerInlineQueryAsync(
