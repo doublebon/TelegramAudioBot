@@ -9,7 +9,7 @@ namespace TelegramAudioBot.Chat;
 
 public class ChatMessage
 {
-    [Restrictions.AccessForUsers("Deni_Don")]
+    [Restrictions.AccessForUsers("*")]
     [MessageFilter.ByType(MessageType.Audio, MessageType.Document, MessageType.Video)]
     public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
