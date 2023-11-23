@@ -9,8 +9,8 @@ namespace TelegramAudioBot.Chat;
 
 public class ChatMessage
 {
-    [Restrictions.AccessForUsers("*")]
-    [MessageFilter.ByType(MessageType.Audio, MessageType.Document, MessageType.Video)]
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByType(MessageType.Audio, MessageType.Document, MessageType.Video, MessageType.Voice)]
     public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         var infoMsg = await bot.SendTextMessageAsync(message.Chat, "Got file, start upload...", cancellationToken: cancellationToken);

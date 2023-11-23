@@ -15,9 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Concentus.Oggfile" Version="1.0.4" />
-      <PackageReference Include="NAudio" Version="2.2.1" />
-      <PackageReference Include="PySharpTelegram" Version="0.1.1" />
+      <PackageReference Include="PySharpTelegram" Version="0.1.3" />
     </ItemGroup>
 
     <ItemGroup>
