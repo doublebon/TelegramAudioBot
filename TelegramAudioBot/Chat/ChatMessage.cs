@@ -1,7 +1,9 @@
+using System.Text.RegularExpressions;
 using PySharpTelegram.Core.Attributes;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramAudioBot.Core.Storage;
 using TelegramAudioBot.Core.Support;
 
@@ -9,6 +11,7 @@ namespace TelegramAudioBot.Chat;
 
 public class ChatMessage
 {
+    
     [Restrictions.AccessGroups("*")]
     [MessageFilter.ByType(MessageType.Audio, MessageType.Document, MessageType.Video, MessageType.Voice)]
     public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
@@ -52,12 +55,43 @@ public class ChatMessage
         }
     }
     
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByCommand("/addvoice")]
+    public static async Task ProcessAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            message.Chat,
+            "Add new voice record in format title:keywords:fileId",
+            replyMarkup: new ForceReplyMarkup { Selective = false },
+            cancellationToken: cancellationToken);
+    }
+    
+    [MessageFilter.ByReplyOnTextEquals("/addvoice")]
+    public static async Task ProcessReplyOnAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        var textLines = message.Text?.Split("\n");
+        if (textLines is { Length: > 0 })
+        {
+            foreach (var line in textLines)
+            {
+                var splitMessage = Regex.Replace(line, @"\s{2,}", string.Empty).Split(":");
+                if (splitMessage is { Length: 3 })
+                {
+                    StorageContainer.AudioStorage.AddVoiceToStore();
+                    
+                    AudioStore.AppendNewVoiceRecord(splitMessage.ElementAt(0), splitMessage.ElementAt(1));
+                    await botClient.SendTextMessageAsync(message.Chat, $"New voice was added: {splitMessage.ElementAt(0)}:{splitMessage.ElementAt(1)}");
+                }
+            }
+        }
+    }
+    
     [MessageFilter.Any]
     public static async Task ProcessTextAny(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
             chatId: message.Chat,
-            text: $"Got any filter",
+            text: $"Got any filter. {user.FirstName}",
             cancellationToken: cancellationToken
         );
     }
