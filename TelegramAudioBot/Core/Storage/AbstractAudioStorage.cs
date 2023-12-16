@@ -15,10 +15,7 @@ public abstract class AbstractAudioStorage
         StoreConnection = storeConnection;
     }
     
-    public abstract Task<IEnumerator<StoredAudio>> GetAllAudiosFromStore();
     public abstract Task UpdateAudioCache();
-    public abstract Task<IEnumerator<StoredAudio>> RemoveCachedVoices(IEnumerable<StoredAudio> removeAudios);
-
     protected void CleanCache()
     {
         _cachedVoices.Clear();
@@ -41,5 +38,12 @@ public abstract class AbstractAudioStorage
                     title: audio.Value.Title, 
                     fileId: audio.Value.Id)
             );
+    }
+
+    public abstract void ChangeStorage(string newStoreConnection);
+
+    protected string GetStorageConnectorName()
+    {
+        return StoreConnection;
     }
 }
