@@ -95,7 +95,7 @@ public class ChatMessage
             await bot.DownloadFileAsync(file.FilePath!, createStream, cancellationToken);
         }
         
-        StorageContainer.AudioStorage.ChangeStorage(Path.GetFileName(file.FilePath!));
+        await StorageContainer.AudioStorage.ChangeStorage(Path.GetFileName(file.FilePath!));
         await bot.SendTextMessageAsync(
             message.Chat,
             "Storage was changed!",
