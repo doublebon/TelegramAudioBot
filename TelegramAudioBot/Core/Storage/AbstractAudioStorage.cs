@@ -8,7 +8,7 @@ namespace TelegramAudioBot.Core.Storage;
 public abstract class AbstractAudioStorage
 {
     protected string StoreConnection { get; }
-    private ConcurrentDictionary<string, StoredAudio> _cachedVoices = new ();
+    private readonly ConcurrentDictionary<string, StoredAudio> _cachedVoices = new ();
     
     protected AbstractAudioStorage(string storeConnection)
     {
@@ -24,7 +24,7 @@ public abstract class AbstractAudioStorage
         _cachedVoices.Clear();
     }
 
-    public void AddVoiceToCache(StoredAudio addAudios)
+    protected void AddVoiceToCache(StoredAudio addAudios)
     {
         _cachedVoices.TryAdd(addAudios.Id, addAudios);
     }
@@ -35,9 +35,11 @@ public abstract class AbstractAudioStorage
     {
         return _cachedVoices
             .Where(audio => audio.Value.IsConsistent(matchText))
-            .Select((audio, i) => new InlineQueryResultCachedVoice(
-                id: Convert.ToString(i),
-                title: audio.Value.Title,
-                fileId: audio.Value.Id));
+            .Select((audio, i) => 
+                new InlineQueryResultCachedVoice(
+                    id: Convert.ToString(i), 
+                    title: audio.Value.Title, 
+                    fileId: audio.Value.Id)
+            );
     }
 }

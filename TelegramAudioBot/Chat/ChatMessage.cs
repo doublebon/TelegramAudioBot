@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text.RegularExpressions;
 using PySharpTelegram.Core.Attributes;
 using Telegram.Bot;
@@ -61,29 +62,48 @@ public class ChatMessage
     {
         await bot.SendTextMessageAsync(
             message.Chat,
-            "Add new voice record in format title:keywords:fileId",
+            "Add new voice record in format fileId:title:keywords",
             replyMarkup: new ForceReplyMarkup { Selective = false },
             cancellationToken: cancellationToken);
     }
     
-    [MessageFilter.ByReplyOnTextEquals("/addvoice")]
+    [MessageFilter.ByReplyOnTextEquals("Add new voice record in format fileId:title:keywords")]
     public static async Task ProcessReplyOnAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         var textLines = message.Text?.Split("\n");
         if (textLines is { Length: > 0 })
         {
+            var wasAdded = new List<StoredAudio>();
             foreach (var line in textLines)
             {
-                var splitMessage = Regex.Replace(line, @"\s{2,}", string.Empty).Split(":");
-                if (splitMessage is { Length: 3 })
+                if (!StoredAudio.IsCorrectStoreString(line))
                 {
-                    StorageContainer.AudioStorage.AddVoiceToStore();
-                    
-                    AudioStore.AppendNewVoiceRecord(splitMessage.ElementAt(0), splitMessage.ElementAt(1));
-                    await botClient.SendTextMessageAsync(message.Chat, $"New voice was added: {splitMessage.ElementAt(0)}:{splitMessage.ElementAt(1)}");
+                    continue;
                 }
+                var storedAudio = new StoredAudio(line);
+                await StorageContainer.AudioStorage.AddVoiceToStore(storedAudio);
+                wasAdded.Add(storedAudio);
             }
+
+            await StorageContainer.AudioStorage.UpdateAudioCache();
+            await bot.SendTextMessageAsync(message.Chat, $"New voices was added: {string.Join(" ", wasAdded.Select(s => s.Title).ToList())}", cancellationToken: cancellationToken);
         }
+        else
+        {
+            await bot.SendTextMessageAsync(message.Chat, $"Wrong text line. Can't convert. Exp format: 'fileId:title:keywords'", cancellationToken: cancellationToken);
+        }
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByCommand("/update")]
+    public static async Task ProcessUpdateStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await StorageContainer.AudioStorage.UpdateAudioCache();
+        
+        await bot.SendTextMessageAsync(
+            message.Chat,
+            "Storage was updated",
+            cancellationToken: cancellationToken);
     }
     
     [MessageFilter.Any]

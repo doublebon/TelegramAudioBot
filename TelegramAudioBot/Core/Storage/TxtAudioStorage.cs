@@ -23,14 +23,11 @@ public class TxtAudioStorage : AbstractAudioStorage
 
         await Parallel.ForEachAsync(nonEmptyLines, (line, _) =>
         {
-            var splitLines = line.Split(":");
-            var audioInfo = new StoredAudio()
+            if (StoredAudio.IsCorrectStoreString(line))
             {
-                Id = splitLines[0],
-                Title = splitLines[1],
-                Keywords = splitLines[2].Split(',')
-            };
-            AddVoiceToCache(audioInfo);
+                AddVoiceToCache(new StoredAudio(line));
+            }
+            
             return ValueTask.CompletedTask;
         });
     }
@@ -45,7 +42,7 @@ public class TxtAudioStorage : AbstractAudioStorage
         if (!string.IsNullOrEmpty(addAudios.Title) && !string.IsNullOrEmpty(addAudios.Id))
         {
             var appending = $"{addAudios.Id}:{addAudios.Title}:{addAudios.KeyWordsAsString()}";
-            await File.AppendAllTextAsync(path: StoreConnection, contents: appending, encoding: Encoding.UTF8);
+            await File.AppendAllTextAsync(path: StoreConnection, contents: Environment.NewLine+appending, encoding: Encoding.UTF8);
         }
     }
 }
