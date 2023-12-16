@@ -67,6 +67,7 @@ public class ChatMessage
             cancellationToken: cancellationToken);
     }
     
+    [Restrictions.AccessGroups("*")]
     [MessageFilter.ByReplyOnTextEquals("Add new voice record in format fileId:title:keywords")]
     public static async Task ProcessReplyOnAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
