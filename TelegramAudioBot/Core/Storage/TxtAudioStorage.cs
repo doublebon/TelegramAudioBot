@@ -9,18 +9,12 @@ public class TxtAudioStorage : AbstractAudioStorage
     {
         File.AppendText(audioStoreFileName).Close();
     }
-
-    public override Task<IEnumerator<StoredAudio>> GetAllAudiosFromStore()
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public override async Task UpdateAudioCache()
     {
         CleanCache();
         var fileLines = await File.ReadAllLinesAsync(StoreConnection);
         var nonEmptyLines = fileLines.Where(x => !string.IsNullOrWhiteSpace(x)).Reverse();
-
         await Parallel.ForEachAsync(nonEmptyLines, (line, _) =>
         {
             if (StoredAudio.IsCorrectStoreString(line))
@@ -32,11 +26,6 @@ public class TxtAudioStorage : AbstractAudioStorage
         });
     }
 
-    public override Task<IEnumerator<StoredAudio>> RemoveCachedVoices(IEnumerable<StoredAudio> removeAudios)
-    {
-        throw new NotImplementedException();
-    }
-
     public override async Task AddVoiceToStore(StoredAudio addAudios)
     {
         if (!string.IsNullOrEmpty(addAudios.Title) && !string.IsNullOrEmpty(addAudios.Id))
@@ -44,5 +33,13 @@ public class TxtAudioStorage : AbstractAudioStorage
             var appending = $"{addAudios.Id}:{addAudios.Title}:{addAudios.KeyWordsAsString()}";
             await File.AppendAllTextAsync(path: StoreConnection, contents: Environment.NewLine+appending, encoding: Encoding.UTF8);
         }
+    }
+
+    public override async void ChangeStorage(string newStoreConnection)
+    {
+        var storageConnectorName = GetStorageConnectorName();
+        File.Delete(StoreConnection);
+        File.Move(newStoreConnection, storageConnectorName);
+        await UpdateAudioCache();
     }
 }

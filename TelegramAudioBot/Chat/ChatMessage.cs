@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using PySharpTelegram.Core.Attributes;
 using Telegram.Bot;
@@ -12,50 +13,6 @@ namespace TelegramAudioBot.Chat;
 
 public class ChatMessage
 {
-    
-    [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByType(MessageType.Audio, MessageType.Document, MessageType.Video, MessageType.Voice)]
-    public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
-    {
-        var infoMsg = await bot.SendTextMessageAsync(message.Chat, "Got file, start upload...", cancellationToken: cancellationToken);
-        var fileId = message.Audio?.FileId ?? message.Document?.FileId ?? message.Video?.FileId;
-        if (fileId == null)
-        {
-            await bot.SendTextMessageAsync(message.Chat, "Can't convert this file. Apply only audio or video format", cancellationToken: cancellationToken);
-            return;
-        }
-        
-        var file = await bot.GetFileAsync(fileId, cancellationToken);
-        var filesDir = Directory.CreateDirectory($"music/{file.FileId}");
-        var fileFullPath = $"{filesDir}/{Path.GetFileName(file.FilePath)}";
-        try
-        {
-            await using (var createStream = new FileStream(fileFullPath, FileMode.Create))
-            {
-                await bot.DownloadFileAsync(file.FilePath!, createStream, cancellationToken);
-            }
-            
-            infoMsg = await bot.EditMessageTextAsync(message.Chat, infoMsg.MessageId, "File uploaded. Start convert to voice...", cancellationToken: cancellationToken);
-            var convertedFile = await OpusConverter.ConvertAudioToOpusAsync(fileFullPath);
-            //await bot.SendChatActionAsync(message.Chat, ChatAction.UploadVoice, cancellationToken: cancellationToken);
-            if (convertedFile == "")
-            {
-                await bot.SendTextMessageAsync(message.Chat, "Can't convert this file. Apply only audio or video format", cancellationToken: cancellationToken);
-                return;
-            }
-                
-            await using (var openStream = new FileStream(convertedFile, FileMode.Open))
-            {
-                await bot.EditMessageTextAsync(message.Chat, infoMsg.MessageId, "Voice file | FileId: ", cancellationToken: cancellationToken);
-                var uploadedVoice = await bot.SendVoiceAsync(message.Chat, new InputFileStream(openStream), cancellationToken: cancellationToken);
-                await bot.SendTextMessageAsync(message.Chat, uploadedVoice.Voice?.FileId ?? "", cancellationToken: cancellationToken);
-            }
-        } finally
-        {
-                filesDir.Delete(true);
-        }
-    }
-    
     [Restrictions.AccessGroups("*")]
     [MessageFilter.ByCommand("/addvoice")]
     public static async Task ProcessAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
@@ -105,6 +62,86 @@ public class ChatMessage
             message.Chat,
             "Storage was updated",
             cancellationToken: cancellationToken);
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByCommand("/change")]
+    public static async Task ProcessChangeStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            message.Chat,
+            "Send new storage file",
+            replyMarkup: new ForceReplyMarkup { Selective = false },
+            cancellationToken: cancellationToken);
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByReplyOnTextEquals("Send new storage file")]
+    public static async Task ProcessReplyOnChangeStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        if (message.Type is not MessageType.Document)
+        {
+            await bot.SendTextMessageAsync(
+                message.Chat,
+                "Wrong storage file type. Expect type: Document",
+                cancellationToken: cancellationToken);
+            return;
+        }
+        
+        var file = await bot.GetFileAsync(message.Document!.FileId, cancellationToken);
+        await using (var createStream = new FileStream(Path.GetFileName(file.FilePath!), FileMode.Create))
+        {
+            await bot.DownloadFileAsync(file.FilePath!, createStream, cancellationToken);
+        }
+        
+        StorageContainer.AudioStorage.ChangeStorage(Path.GetFileName(file.FilePath!));
+        await bot.SendTextMessageAsync(
+            message.Chat,
+            "Storage was changed!",
+            cancellationToken: cancellationToken);
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByType(MessageType.Audio, MessageType.Document, MessageType.Video, MessageType.Voice)]
+    public static async Task ProcessAudio(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        var infoMsg = await bot.SendTextMessageAsync(message.Chat, "Got file, start upload...", cancellationToken: cancellationToken);
+        var fileId = message.Audio?.FileId ?? message.Document?.FileId ?? message.Video?.FileId;
+        if (fileId == null)
+        {
+            await bot.SendTextMessageAsync(message.Chat, "Can't convert this file. Apply only audio or video format", cancellationToken: cancellationToken);
+            return;
+        }
+        
+        var file = await bot.GetFileAsync(fileId, cancellationToken);
+        var filesDir = Directory.CreateDirectory($"music/{file.FileId}");
+        var fileFullPath = $"{filesDir}/{Path.GetFileName(file.FilePath)}";
+        try
+        {
+            await using (var createStream = new FileStream(fileFullPath, FileMode.Create))
+            {
+                await bot.DownloadFileAsync(file.FilePath!, createStream, cancellationToken);
+            }
+            
+            infoMsg = await bot.EditMessageTextAsync(message.Chat, infoMsg.MessageId, "File uploaded. Start convert to voice...", cancellationToken: cancellationToken);
+            var convertedFile = await OpusConverter.ConvertAudioToOpusAsync(fileFullPath);
+            //await bot.SendChatActionAsync(message.Chat, ChatAction.UploadVoice, cancellationToken: cancellationToken);
+            if (convertedFile == "")
+            {
+                await bot.SendTextMessageAsync(message.Chat, "Can't convert this file. Apply only audio or video format", cancellationToken: cancellationToken);
+                return;
+            }
+                
+            await using (var openStream = new FileStream(convertedFile, FileMode.Open))
+            {
+                await bot.EditMessageTextAsync(message.Chat, infoMsg.MessageId, "Voice file | FileId: ", cancellationToken: cancellationToken);
+                var uploadedVoice = await bot.SendVoiceAsync(message.Chat, new InputFileStream(openStream), cancellationToken: cancellationToken);
+                await bot.SendTextMessageAsync(message.Chat, uploadedVoice.Voice?.FileId ?? "", cancellationToken: cancellationToken);
+            }
+        } finally
+        {
+                filesDir.Delete(true);
+        }
     }
     
     [MessageFilter.Any]
