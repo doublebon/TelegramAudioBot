@@ -40,9 +40,11 @@ public abstract class AbstractAudioStorage
             );
     }
 
-    public abstract void ChangeStorage(string newStoreConnection);
+    public abstract Task ChangeStorage(string newStoreConnection);
+    
+    public abstract Task ClearStorage();
 
-    protected string GetStorageConnectorName()
+    public string GetStorageConnectorName()
     {
         return StoreConnection;
     }

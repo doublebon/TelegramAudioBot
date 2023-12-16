@@ -8,6 +8,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramAudioBot.Core.Storage;
 using TelegramAudioBot.Core.Support;
+using File = System.IO.File;
 
 namespace TelegramAudioBot.Chat;
 
@@ -99,6 +100,23 @@ public class ChatMessage
             message.Chat,
             "Storage was changed!",
             cancellationToken: cancellationToken);
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByCommand("/getstorage")]
+    public static async Task ProcessGetStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await using var stream = File.Open(StorageContainer.AudioStorage.GetStorageConnectorName(), FileMode.Open);
+        var iof = new InputFileStream(stream, StorageContainer.AudioStorage.GetStorageConnectorName());
+        await bot.SendDocumentAsync(message.Chat.Id, iof, cancellationToken: cancellationToken);
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByCommand("/clean")]
+    public static async Task ProcessCleanStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await StorageContainer.AudioStorage.ClearStorage();
+        await bot.SendTextMessageAsync(message.Chat, "Storage was cleared!", cancellationToken: cancellationToken);
     }
     
     [Restrictions.AccessGroups("*")]

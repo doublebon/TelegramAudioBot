@@ -7,7 +7,7 @@ public class TxtAudioStorage : AbstractAudioStorage
     public TxtAudioStorage(string audioStoreFileName) : 
         base(audioStoreFileName)
     {
-        File.AppendText(audioStoreFileName).Close();
+        CreateStoreIfNotExist();
     }
     
     public override async Task UpdateAudioCache()
@@ -35,11 +35,29 @@ public class TxtAudioStorage : AbstractAudioStorage
         }
     }
 
-    public override async void ChangeStorage(string newStoreConnection)
+    public override async Task ChangeStorage(string newStoreConnection)
     {
         var storageConnectorName = GetStorageConnectorName();
         File.Delete(StoreConnection);
         File.Move(newStoreConnection, storageConnectorName);
         await UpdateAudioCache();
+    }
+
+    public override async Task ClearStorage()
+    {
+        File.Delete(StoreConnection);
+        CreateStoreIfNotExist();
+        await UpdateAudioCache();
+    }
+
+    private void CreateStoreIfNotExist()
+    {
+        if (!File.Exists(StoreConnection))
+        {
+            using (var sw = File.CreateText(StoreConnection))
+            {
+                sw.WriteLine(" "); // Add empty line
+            }
+        }
     }
 }
