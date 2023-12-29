@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Security.AccessControl;
-using System.Text.RegularExpressions;
 using PySharpTelegram.Core.Attributes;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using TelegramAudioBot.Core.Constants;
 using TelegramAudioBot.Core.Storage;
 using TelegramAudioBot.Core.Support;
 using File = System.IO.File;
@@ -15,18 +13,29 @@ namespace TelegramAudioBot.Chat;
 public class ChatMessage
 {
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByCommand("/addvoice")]
-    public static async Task ProcessAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    [MessageFilter.ByCommand(Constants.Command.HELP)]
+    public static async Task ProcessHelp(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
             message.Chat,
-            "Add new voice record in format fileId:title:keywords",
+            string.Join('\n', Constants.Command.GetAllCommands()),
             replyMarkup: new ForceReplyMarkup { Selective = false },
             cancellationToken: cancellationToken);
     }
     
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByReplyOnTextEquals("Add new voice record in format fileId:title:keywords")]
+    [MessageFilter.ByCommand(Constants.Command.ADD_VOICE)]
+    public static async Task ProcessAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
+    {
+        await bot.SendTextMessageAsync(
+            message.Chat,
+            Constants.Text.ADD_NEW_VOICE,
+            replyMarkup: new ForceReplyMarkup { Selective = false },
+            cancellationToken: cancellationToken);
+    }
+    
+    [Restrictions.AccessGroups("*")]
+    [MessageFilter.ByReplyOnTextEquals(Constants.Text.ADD_NEW_VOICE)]
     public static async Task ProcessReplyOnAddVoice(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         var textLines = message.Text?.Split("\n");
@@ -54,7 +63,7 @@ public class ChatMessage
     }
     
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByCommand("/update")]
+    [MessageFilter.ByCommand(Constants.Command.UPDATE)]
     public static async Task ProcessUpdateStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await StorageContainer.AudioStorage.UpdateAudioCache();
@@ -66,18 +75,18 @@ public class ChatMessage
     }
     
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByCommand("/change")]
+    [MessageFilter.ByCommand(Constants.Command.CHANGE)]
     public static async Task ProcessChangeStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await bot.SendTextMessageAsync(
             message.Chat,
-            "Send new storage file",
+            Constants.Text.SEND_NEW_FILE,
             replyMarkup: new ForceReplyMarkup { Selective = false },
             cancellationToken: cancellationToken);
     }
     
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByReplyOnTextEquals("Send new storage file")]
+    [MessageFilter.ByReplyOnTextEquals(Constants.Text.SEND_NEW_FILE)]
     public static async Task ProcessReplyOnChangeStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         if (message.Type is not MessageType.Document)
@@ -103,7 +112,7 @@ public class ChatMessage
     }
     
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByCommand("/getstorage")]
+    [MessageFilter.ByCommand(Constants.Command.GET_STORAGE)]
     public static async Task ProcessGetStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await using var stream = File.Open(StorageContainer.AudioStorage.GetStorageConnectorName(), FileMode.Open);
@@ -112,7 +121,7 @@ public class ChatMessage
     }
     
     [Restrictions.AccessGroups("*")]
-    [MessageFilter.ByCommand("/clean")]
+    [MessageFilter.ByCommand(Constants.Command.CLEAN)]
     public static async Task ProcessCleanStorage(ITelegramBotClient bot, Message message, User user, CancellationToken cancellationToken)
     {
         await StorageContainer.AudioStorage.ClearStorage();
