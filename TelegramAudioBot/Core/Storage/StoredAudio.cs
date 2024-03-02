@@ -18,8 +18,7 @@ public class StoredAudio
     
     public bool IsConsistent(string matchPattern)
     {
-        return Title.Contains(matchPattern, StringComparison.OrdinalIgnoreCase) |
-               Keywords.Contains(matchPattern);
+        return Title.Contains(matchPattern, StringComparison.OrdinalIgnoreCase) || Keywords.Equals(matchPattern);
     }
     
     public static bool IsCorrectStoreString(string storeString)
