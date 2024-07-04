@@ -14,16 +14,13 @@ public class TxtAudioStorage : AbstractAudioStorage
     {
         CleanCache();
         var fileLines = await File.ReadAllLinesAsync(StoreConnection);
-        var nonEmptyLines = fileLines.Where(x => !string.IsNullOrWhiteSpace(x)).Reverse();
-        await Parallel.ForEachAsync(nonEmptyLines, (line, _) =>
-        {
-            if (StoredAudio.IsCorrectStoreString(line))
-            {
-                AddVoiceToCache(new StoredAudio(line));
-            }
-            
-            return ValueTask.CompletedTask;
-        });
+        var nonEmptyLines = fileLines
+            .Where(line => !string.IsNullOrWhiteSpace(line) && StoredAudio.IsCorrectStoreString(line))
+            .Select(line => new StoredAudio(line))
+            .Reverse()
+            .ToArray();
+        
+        AddVoiceToCache(nonEmptyLines);
     }
 
     public override async Task AddVoiceToStore(StoredAudio addAudios)
