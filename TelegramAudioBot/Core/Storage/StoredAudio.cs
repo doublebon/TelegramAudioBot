@@ -4,7 +4,7 @@ public class StoredAudio
 {
     public string Id { get; }
     public string Title { get; }
-    public string[] Keywords { get; }
+    private string[] Keywords { get; }
     private string KeywordsAsString => string.Join(",", Keywords);
     
     public StoredAudio(string storeString)
@@ -13,12 +13,12 @@ public class StoredAudio
         
         Id = splitString[0];
         Title = splitString[1];
-        Keywords = splitString.Length > 2 ? splitString[2].Split(',') : new []{""};
+        Keywords = splitString.Length > 2 ? splitString[2].Split(',') : [""];
     }
     
     public bool IsConsistent(string matchPattern)
     {
-        return Title.Contains(matchPattern, StringComparison.OrdinalIgnoreCase) || Keywords.Equals(matchPattern);
+        return Title.Contains(matchPattern, StringComparison.OrdinalIgnoreCase) || Keywords.Contains(matchPattern);
     }
     
     public static bool IsCorrectStoreString(string storeString)
