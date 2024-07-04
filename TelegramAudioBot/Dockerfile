@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 WORKDIR /app
 
 # Install ffmpeg from the official repository with no recommended packages
