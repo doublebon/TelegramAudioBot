@@ -4,7 +4,7 @@ WORKDIR /app
 # Install ffmpeg from the official repository with no recommended packages
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY . "TelegramAudioBot"
 RUN dotnet restore "TelegramAudioBot/TelegramAudioBot.csproj"
